@@ -1,0 +1,18 @@
+[package]
+name = "ulp"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+members = [
+    "example",
+    "ulp_macro"
+]
+
+[[bin]]
+name = "example"
+path = "main.rs"
+
+[dependencies]
+ulp_macro = { path = "ulp_macro" }

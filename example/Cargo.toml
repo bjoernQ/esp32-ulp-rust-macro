@@ -1,0 +1,16 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ulp_macro = { path = "../ulp_macro" }
+panic-halt = "0.2"
+hal = { git = "https://github.com/bjoernQ/esp-hal", package = "esp32-hal", branch = "esp32-local-pac" }
+
+
+[dependencies.xtensa-lx-rt]
+git = "https://github.com/esp-rs/xtensa-lx-rt/"
+branch = "unify-xtensa-asm"
+features = ["lx6"]
+optional = false

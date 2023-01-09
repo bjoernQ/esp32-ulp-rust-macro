@@ -1,10 +1,9 @@
 [target.xtensa-esp32-none-elf]
-runner = "xtensa-esp32-elf-gdb -q -x xtensa.gdb"
+runner = "espflash flash --monitor"
 
 [build]
 rustflags = [
-  "-C", "link-arg=-nostartfiles",
-  "-C", "link-arg=-Wl,-Tlink.x",
+    "-C", "link-arg=-Tlinkall.x",
 ]
 target = "xtensa-esp32-none-elf"
 

@@ -3,6 +3,7 @@
 
 extern crate ulp_macro;
 use core::fmt::Write;
+use esp32_hal as hal;
 use hal::{pac, Serial};
 use panic_halt as _;
 use ulp_macro::ulp_asm;
@@ -31,7 +32,7 @@ fn main() -> ! {
     let peripherals = pac::Peripherals::take().unwrap();
 
     let sens = peripherals.SENS;
-    let rtc = peripherals.RTCCNTL;
+    let rtc = peripherals.RTC_CNTL;
 
     rtc.state0.write(|w| w.ulp_cp_slp_timer_en().clear_bit());
     for _ in 0..100_000 {}
@@ -49,7 +50,7 @@ fn main() -> ! {
         }
     }
 
-    let mut serial0 = Serial::new(peripherals.UART0).unwrap();
+    let mut serial0 = Serial::new(peripherals.UART0);
     writeln!(serial0, "Hello world! Hello ULP!").unwrap();
 
     let data_ptr = unsafe { rtc_slow_mem.offset(ulp_label_data) as *mut u32 };
@@ -61,7 +62,7 @@ fn main() -> ! {
     rtc.state0.write(|w| w.ulp_cp_slp_timer_en().set_bit());
 
     loop {
-        for _ in 0..250_000 {}
+        for _ in 0..20_000 {}
         writeln!(serial0, "data is {}", unsafe {
             data_ptr.read_volatile() & 0xffff
         })

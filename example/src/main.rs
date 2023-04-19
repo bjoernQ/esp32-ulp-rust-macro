@@ -30,11 +30,11 @@ fn main() -> ! {
     );
 
     unsafe {
+        // ideally this should be in the HAL
         let sens = &*esp32::SENS::PTR;
         let rtc = &*esp32::RTC_CNTL::PTR;
 
         rtc.state0.write(|w| w.ulp_cp_slp_timer_en().clear_bit());
-        for _ in 0..100_000 {}
         sens.sar_start_force.write(|w| w.pc_init().bits(0));
         sens.sar_start_force
             .write(|w| w.ulp_cp_force_start_top().clear_bit());
@@ -49,6 +49,7 @@ fn main() -> ! {
     // getter and setters are named as the label with a prefix
     println!("data is {}", ulp_code.get_data());
     unsafe {
+        // ideally this should be in the HAL
         let rtc = &*esp32::RTC_CNTL::PTR;
         rtc.state0.write(|w| w.ulp_cp_slp_timer_en().set_bit());
     }

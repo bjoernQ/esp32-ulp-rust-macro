@@ -2,7 +2,6 @@
 
 use litrs::StringLit;
 use proc_macro::{self, TokenStream};
-use proc_macro2::Ident;
 use quote::format_ident;
 use quote::quote;
 
@@ -27,16 +26,50 @@ pub fn ulp_asm(input: TokenStream) -> TokenStream {
 
             match code {
                 Ok((code, labels)) => {
-                    let label_names: Vec<Ident> = labels
-                        .iter()
-                        .map(|label| format_ident!("ulp_label_{}", label.name))
-                        .collect();
-                    let label_values: Vec<u32> = labels.iter().map(|label| label.address).collect();
+                    let code_len = code.len();
+
+                    let mut accessors = Vec::new();
+                    for lbl in labels {
+                        let getter_name = format_ident!("get_{}", lbl.name);
+                        let setter_name = format_ident!("set_{}", lbl.name);
+                        let address = lbl.address;
+
+                        accessors.push(quote! {
+                            fn #getter_name(&self) -> u16 {
+                                unsafe {(((#address + 0x5000_0000)  as *const u32).read_volatile() & 0xffff) as u16}
+                            }
+
+                            fn #setter_name(&self, value: u16) {
+                                unsafe {((#address + 0x5000_0000) as *mut u32).write_volatile(value as u32)}
+                            }
+
+                        });
+                    }
 
                     let tokens = quote! {
-                       let ulp_code = [ #(#code),*  ];
+                        {
+                            struct _Ulp {
+                                code: [u8; #code_len],
+                            }
 
-                       #(let #label_names = #label_values as isize;)*
+                            impl _Ulp {
+                                #(#accessors)*
+
+                                fn load(&self) {
+                                    unsafe {
+                                        core::ptr::copy_nonoverlapping(
+                                            self.code.as_ptr() as *const u8,
+                                            0x5000_0000 as *mut u8,
+                                            #code_len as usize
+                                        );
+                                    }
+                                }
+                            }
+
+                            _Ulp {
+                                code: [ #(#code),*  ]
+                            }
+                        }
                     };
 
                     tokens.into()
